@@ -1,0 +1,159 @@
+// Imagine we have a walking robot with 7 segments (2 thigh, 2 shank, 1 torso, 2 hands) standing on a slope.
+
+joint type YRevolve revolute(y)
+
+world {
+	gravity [9.81*cos(pi/3.0), 0.0, 9.81*sin(pi/3.0)] // inclined slope under the walkers' feet
+}
+
+system DynamicWalker {
+	body shank1 {
+		mass {
+			value 1.0
+			position [0.0, 0.0, 0.5]
+			// So these are actually 4x3 matrices
+			inertia matrix DefaultInertia [1.0e-3.0, 0.0,      0.0,
+					                       0.0,      1.0e-3.0, 0.0,
+				                           0.0,      0.0,      1.0e-3.0]
+		}
+	}
+	
+	body thigh1 {
+		mass {
+			value 1.0
+			position [0.0, 0.0, 0.5]
+			inertia DefaultInertia
+		}
+	}
+	
+	body shank2 {
+		
+		mass {
+			value 1.0
+			position [0.0, 0.0, -0.5]
+			inertia DefaultInertia
+		}
+	}
+	
+	body thigh2 {
+		mass{
+			value 1.0
+			position [0.0, 0.0, -0.5]
+			inertia DefaultInertia
+		}
+	}
+	
+	body torso {
+	
+		mass {
+			value 1.5
+			position [0.0, 0.0, 0.5]
+			inertia [2.0e-3.0, 0.0,      0.0,
+					 0.0,      2.0e-3.0, 0.0,
+					 0.0,      0.0,      2.0e-3.0]
+		}
+	}
+	
+	body hand1 {
+		mass {
+			value 1.0
+			position [0.0, 0.0, -0.5]
+			inertia DefaultInertia
+		}
+	}
+	
+	body hand2 {
+		mass {
+			value 1.0
+			position [0.0, 0.0, -0.5]
+			inertia DefaultInertia	
+		}
+	}
+	
+	joint ankle : YRevolve start
+		between base (with relative transformation matrix Origin [0.0, 0.0, 0.0], reorient NoReorient ((null, 0.0)))
+		and shank1 (with relative transformation Origin, NoReorient)
+		stiffness {
+			springCoeff 5.0 
+			springInit 5.0
+			dampViscous 5.0
+			dampCoulomb 5.0
+		}
+			                                            
+	joint knee1 : YRevolve
+		between shank1 (with relative transformation matrix OO1 [0.0, 0.0, 1.0], NoReorient)
+		and thigh1 (with relative transformation Origin, NOReorient)
+		stiffness {
+			springCoeff 5.0 
+			springInit 5.0
+			dampViscous 5.0
+			dampCoulomb 5.0
+		}
+		
+	joint hip1 : YRevolve
+		between thigh1 (with relative transformation matrix O11 [0.0, 1.0, 1.0], NoReorient)
+		and thigh2 (with relative transformation Origin, NoReorient)
+		stiffness {
+			springCoeff 5.0 
+			springInit 5.0
+			dampViscous 5.0
+			dampCoulomb 5.0
+		}
+		
+	joint knee2 : YRevolve
+		between thigh2 (with relative transformation matrix OOM1 [0.0, 0.0, -1.0], NoReorient)
+		and shank2 (with relative transformation Origin, NoReorient)
+		stiffness {
+			springCoeff 5.0 
+			springInit 5.0
+			dampViscous 5.0
+			dampCoulomb 5.0
+		}
+		
+	joint hip2 : revolute(y, x, z)
+		between thigh1 (with relative transformation matrix OP51 [0.0, 0.5, -1.0], NoReorient)
+		and torso (with relative transformation Origin, NoReorient)
+		stiffness {
+			springCoeff 5.0 
+			springInit 5.0
+			dampViscous 5.0
+			dampCoulomb 5.0
+		}
+		
+	joint shoulder1 : joint type XRevolve revolute(x)
+		between torso (with relative transformation matrix OP251 [0.0 -0.25 1.0], NoReorient)
+		and hand1 (with relative transformation Origin, NoReorient)
+		stiffness {
+			springCoeff 5.0 
+			springInit 5.0
+			dampViscous 5.0
+			dampCoulomb 5.0
+		}
+		
+	joint shoulder1 : joint type XRevolve revolute(x)
+		between torso (with relative transformation matrix OMP251 [0.0 0.25 1.0], NoReorient)
+		and hand1 (with relative transformation Origin, NoReorient)
+		stiffness {
+			springCoeff 5.0 
+			springInit 5.0
+			dampViscous 5.0
+			dampCoulomb 5.0
+		}
+		
+	joint foot2 : YRevolve // it is a constraint because it makes a loop
+		between shank2 (with relative transformation OOM1, NoReorient)
+		and base (with relative transformation matrix O1O [0.0, 1.0, 0.0], NoReorient)
+		stiffness {
+			springCoeff 5.0 
+			springInit 5.0
+			dampViscous 5.0
+			dampCoulomb 5.0
+		}
+
+	external load foot2 : force
+		at shank1 (with relative transformation Origin, NoReorient)	
+		
+	external load foot2 : force
+		at shank2 (with relative transformation OOM1, NoReorient)
+		
+}

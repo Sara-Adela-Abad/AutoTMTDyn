@@ -1,0 +1,56 @@
+There is no need to have geometric constraints defined in the program.
+Assume the order of the definition of the bodies and the joints can be arbitrary.
+To translate:
+	to start: The compiler searches for the first joint with "base" as one end and starts forming the matlab code inputs afterwards.
+	The first joint is "ankle" in this case: so the first body is "shank1"
+		fill the following variables for body "shank1":
+			mas vector: 	m(1) = m1
+			important points location vectors stored in a matrix:
+				lc(1,:) = [0 0 0.5 (first three elements for the point relative position)
+							0 (4th element for the point type: 0 for mass, 1 for external load, 2 for constraint)
+							0 (number of the link (previous point) which this new point is connected to via a transformation,
+								leave it 0 if the next point is connected to the last defined joint through a transformation)
+			inertia matrix stored in a cube:
+				I( : , : , 1 ) = inertia matrix
+			joint transformations:
+				j(1,:,1) = [ 2 inf 0 0 0 ];
+			joint stiffness parameters:
+				jkd(1,:,1) = [ springCoeff, springInit ];
+				jkd(2,1,1) = dampViscous;
+				jkd(3,1,1) = dampCoulomb;
+	The second body is connected through the first other joint attached to the first body.
+	The other joint connected to the "shank1" is "knee1" which is connected to "thigh1". So the next body is "thigh1".
+	If we had another joint connected to "shank1" we would model that later.
+		fill the "matlab" variables for body "thigh1":
+			...
+	when all the joints and bodies in a series link investigated, we return to go for the second joint on the first link with more than one joints and investigate a new series of links and joints.
+		Then we have to investigate the third joint on the links and so on to investigate all the branches.
+	If a new joint on a body is connected to a predefined body (not a new body), it is a loop and we model that joint as a constraint.
+	So there is no need to explicitly define a constraint.
+	A constraint is a joint between a body with a predefined body. A common joint is a joint between a body and a new body.
+	For a constraint we fill lc as follows:
+			lc(n,:) = [ 0 0 0 (leave these zero if the constraint is on the new defined joint)
+							2 (4th element for the point type: 0 for mass, 1 for external load, 2 for constraint)
+							i (i is the number of the link which the constraint joint is connected to via a transformation,
+								leave it 0 if the constraint is connected to the last defined joint through a transformation)
+			lc(n+1,:) = [ 0 0 0 (leave these zero if the constraint is on the new defined joint)
+							2 (4th element for the point type: 0 for mass, 1 for external load, 2 for constraint)
+							j (i is the number of the link which the constraint joint is connected to via a transformation,
+								leave it 0 if the constraint is connected to the last defined joint through a transformation)
+			joint transformations:
+				j(n,:,:) = [ 2 inf 0 0 -1.0 ;
+							1 inf 0 0 0 ;
+							3 inf 0 0 0	]; // it has 3 rotations meaning free rotation at this joint point.
+					leave the first two elements zero if the constraint is just connected on the link: j(n,:,:) = [ 0 0 0 0 -1.0 ];
+				j(n+1,:,:) = [ 0 0 0 1.0 0 ]; // leave these zero because the other end of the constraint joint is fixed on the other body.
+			For each constraint joint, two constraint points should be defined unless that joint is connected to ground.
+	For external forces it is straight forward.
+			lc(n,:) = [ 0 0 -0.1 (first three elements for the point relative position)
+							1 (4th element for the point type: 0 for mass, 1 for external load, 2 for constraint)
+							i (i is the number of the link which the constraint joint is connected to via a transformation,
+								leave it 0 if the constraint is connected to the last defined joint through a transformation)
+			joint transformations:
+				j(n,:,:) = [ 0 0 0 0 0 ]; // leave these zero if the point is on the link.
+		
+	
+	

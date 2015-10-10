@@ -1,0 +1,63 @@
+// Imagine we have a ser of 6 rigid snake scales attached on a helical spring with regional lock at two points.
+
+stiffness DefaultStiffness {
+	springCoeff 0.0
+	springInit 0.0
+	dampViscous 0.1
+	dampCoulomb 0.0
+}
+
+
+joint type XRevolve revolute x with DefaultStiffness
+ 
+
+world {
+	gravity [0.0, 0.0, -9.81]
+}
+
+system DynamicWalker {
+	body scaleL {
+		mass {
+			value 1.0
+			position [0.0, 0.0, -1.0]
+			inertia matrix DefaultInertia [2.0e-3.0, 0.0,      0.0,
+					                       0.0,      2.0e-3.0, 0.0,
+				                           0.0,      0.0,      2.0e-3.0]
+		}
+	}
+	
+	body scale {
+		mass {
+			value 1.0
+			position [0.5, 0.0, -0.5]
+			inertia matrix DefaultInertia [1.0e-3.0, 0.0,      0.0,
+					                       0.0,      1.0e-3.0, 0.0,
+				                           0.0,      0.0,      1.0e-3.0]
+		}
+	}
+
+
+	joint hing1 : XRevolve start
+		between scaleL (with relative transformation matrix Origin [0.0, 0.0, 1.0], reorient NoReorient [])
+		and base
+
+	joint hing2 : XRevolve
+		between scale (with relative transformation matrix Origin [0.0, 0.0, -2.0], reorient YReorient1 [2.0, pi])
+		and scaleL
+		
+
+	repeat(1) : body scale + joint hing3 : XRevolve start
+		between scale (with relative transformation matrix Origin [1.0, 0.0, -1.0], reorient YReorient2 [2.0, pi/2])
+		and scaleL(equal hing1)
+		
+	repeat(1) : body scaleL + joint hing3
+		
+	repeat(1) : body scale + joint hing2
+	
+	repeat(1) : body scale + joint hing3
+
+
+	// we have three copies of scale in total
+	external load tip : force
+		at scale_copy(3) (with relative transformation matrix Tip [1.0, 0.0, -1.0], reorient YReorient2 )
+}
