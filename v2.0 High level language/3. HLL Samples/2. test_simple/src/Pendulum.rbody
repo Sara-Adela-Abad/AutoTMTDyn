@@ -1,0 +1,59 @@
+
+stiffness DefaultStiffness {
+	springCoeff 5.0
+	springInit 5.0
+	dampViscous 5.0
+	dampCoulomb 5.0
+}
+
+joint type YRevolve revolute y with DefaultStiffness
+
+joint type XRevolve revolute x with DefaultStiffness
+
+
+world {
+	gravity [0.0, 0.0, -9.81]
+}
+
+system DynamicWalker {
+	body link1 {
+		mass {
+			value 1.0
+			position [0.0, 0.0, 0.5]
+			inertia matrix DefaultInertia [1.0e-3, 0.0,    0.0,
+					                       0.0,    1.0e-3, 0.0,
+				                           0.0,    0.0,    1.0e-3]
+		}
+	}
+	
+	body link2 {
+		mass {
+			value 1.0
+			position [0.0, 0.0, 0.5]
+			inertia DefaultInertia
+		}
+	}
+	
+	body link3 {
+		mass {
+			value 1.0
+			position [0.0, 0.0, 0.5]
+			inertia DefaultInertia
+		}
+	}
+		
+	
+	joint j1 : YRevolve start
+		between base (with relative transformation matrix Origin [0.0, 0.0, 0.0], reorient NoReorient ())
+		and link1
+			                                            
+	joint j2 : XRevolve
+		between link1 (with relative transformation matrix OO1 [0.0, 0.0, 1.0], NoReorient)
+		and link2
+		
+	joint j3 : XRevolve
+		between link1 (with relative transformation matrix O11 [0.0, 1.0, 1.0], NoReorient)
+		and link3
+		
+
+}
